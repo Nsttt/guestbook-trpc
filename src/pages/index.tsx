@@ -26,10 +26,28 @@ const Messages = () => {
 };
 
 const Home: NextPage = () => {
+  const trpcContext = trpc.useContext();
   const { data: session, status } = useSession();
 
   const [message, setMessage] = useState("");
-  const postMessage = trpc.useMutation("guestbookpostNewMessage", {});
+  const postMessage = trpc.useMutation("guestbookpostNewMessage", {
+    onMutate: () => {
+      trpcContext.cancelQuery(["guestbookgetAllMessages"]);
+
+      const optimisticUpdates = trpcContext.getQueryData([
+        "guestbookgetAllMessages",
+      ]);
+      if (optimisticUpdates) {
+        trpcContext.setQueryData(
+          ["guestbookgetAllMessages"],
+          optimisticUpdates
+        );
+      }
+    },
+    onSettled: () => {
+      trpcContext.invalidateQueries(["guestbookgetAllMessages"]);
+    },
+  });
 
   if (status === "loading") {
     return <main className="flex flex-col items-center pt-4">Loading...</main>;
