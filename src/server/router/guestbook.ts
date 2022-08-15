@@ -4,7 +4,7 @@ import { createRouter } from "./context";
 
 export const guestbookRouter = createRouter()
   .middleware(async ({ ctx, next }) => {
-    if (ctx.session) {
+    if (!ctx.session) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
